@@ -1,0 +1,369 @@
+
+
+
+Simple Manual Control: Write code where the robot moves forward while the "forward" button is pressed and stops immediately when the button is released.
+
+1. Simple Manual Control
+
+onevent buttons
+    # Runs whenever a button state changes
+    if button.forward == 1 then
+        motor.left.target = 200
+        motor.right.target = 200
+    else
+        motor.left.target = 0
+        motor.right.target = 0
+    end
+
+
+
+2. Visual Signaling
+
+onevent buttons
+    if button.center == 1 then
+        # Red (Red=32, Green=0, Blue=0)
+        call leds.top(32, 0, 0)
+    elseif button.forward == 1 or button.backward == 1 or button.left == 1 or button.right == 1 then
+        # Green (Red=0, Green=32, Blue=0)
+        call leds.top(0, 32, 0)
+    else
+        call leds.top(0, 0, 0) # Off
+    end
+
+
+3.Start/Stop (Toggle)
+
+var running = 0
+
+onevent button.center
+    # This event triggers only when center is pressed (edge detection implied in some contexts, strictly checks state here)
+    if button.center == 1 then
+        if running == 0 then
+            running = 1
+            motor.left.target = 200
+            motor.right.target = 200
+        else
+            running = 0
+            motor.left.target = 0
+            motor.right.target = 0
+        end
+    end
+
+4.Turn on Command
+
+onevent buttons
+    if button.right == 1 then
+        motor.left.target = 200
+        motor.right.target = -200
+    elseif button.left == 1 then
+        motor.left.target = -200
+        motor.right.target = 200
+    else
+        motor.left.target = 0
+        motor.right.target = 0
+    end
+
+5. Sound Feedback
+
+onevent buttons
+    if button.forward == 1 then call sound.system(1) end
+    if button.backward == 1 then call sound.system(2) end
+    if button.left == 1 then call sound.system(3) end
+    if button.right == 1 then call sound.system(4) end
+    if button.center == 1 then call sound.system(5) end
+
+
+Emergency Stop
+
+onevent prox
+    # Check center sensor (index 2)
+    if prox.horizontal[1] > 2000 then
+        motor.left.target = 0
+        motor.right.target = 0
+        call leds.top(32, 0, 0) # Visual warning
+    else
+        motor.left.target = 200
+        motor.right.target = 200
+        call leds.top(0, 32, 0) # All clear
+    end
+
+
+Parking Sensor (Visual)
+
+# LED circle has 8 LEDs (0-7). Max prox is ~4000.
+var led_index
+
+onevent prox
+    call leds.circle(0,0,0,0,0,0,0,0) # Reset
+    # Map prox value to 0-8 range
+    led_index = prox.horizontal[1] / 500 
+    
+    if led_index > 8 then led_index = 8 end
+    
+    # Logic to light up specific LEDs could vary, simplified here:
+    # A specific pattern function usually needed for progressive circle fill
+    if led_index > 0 then call leds.circle(32,32,32,32,32,32,32,32) end 
+    # (Simplified: Lights up if close. Real implementation requires a loop or if-ladder)
+    
+8. Braitenberg Vehicle (Fear/Coward) Logic: High sensor value on Right -> High speed on Left wheel (Turn Left/Away).
+
+onevent prox
+    # Crossed connections
+    motor.left.target = prox.horizontal[2] / 10  # Right sensor drives Left wheel
+    motor.right.target = prox.horizontal / 10 # Left sensor drives Right wheel
+    
+9.Braitenberg Vehicle (Aggressive) Logic: High sensor value on Left -> High speed on Left wheel (Turn Right/Toward).
+
+onevent prox
+    # Direct connections
+    motor.left.target = prox.horizontal / 10
+    motor.right.target = prox.horizontal[2] / 10
+
+
+10. Follow the Hand (P-Controller)
+
+var target_dist = 3000 # Specific sensor value representing ~10cm
+var error
+var gain = 1 # Proportional gain
+
+onevent prox
+    error = target_dist - prox.horizontal[1]
+    # If error is positive (too far), move forward. If negative (too close), move back.
+    motor.left.target = error / gain
+    motor.right.target = error / gain
+
+11.Blinker/Strobe
+
+var led_state = 0
+timer.period = 500 # 500ms
+
+onevent timer0
+    if led_state == 0 then
+        call leds.top(32, 32, 32)
+        led_state = 1
+    else
+        call leds.top(0, 0, 0)
+        led_state = 0
+    end
+
+
+12. Timed Movement
+
+onevent button.forward
+    motor.left.target = 200
+    motor.right.target = 200
+    timer.period = 2000 # 2 seconds
+
+onevent timer0
+    motor.left.target = 0
+    motor.right.target = 0
+    timer.period = 0 # Disable timer
+
+13. Cliff Detection (Exam Style)
+
+var state = 0 # 0=Forward, 1=BackingUp
+
+onevent prox
+    # Threshold for ground: High value = floor, Low value (<200) = cliff/black line
+    if prox.ground.delta < 200 or prox.ground.delta[3] < 200 then
+        if state == 0 then
+            state = 1
+            motor.left.target = -200
+            motor.right.target = -200
+            timer.period = 1000
+        end
+    elseif state == 0 then
+        motor.left.target = 200
+        motor.right.target = 200
+    end
+    
+onevent timer0
+    # After backing up, rotate 90 deg (calibration needed for time)
+    motor.left.target = 200
+    motor.right.target = -200
+    # Add a second timer or just stop here for simplicity
+    state = 0 
+    
+    
+14. Blind Square (Odometry)
+
+var side_count = 0
+var state = 0 # 0=Forward, 1=Turn
+
+# Start square
+onevent button.center
+    state = 0
+    side_count = 0
+    timer.period = 2000 # Start moving
+    motor.left.target = 200
+    motor.right.target = 200
+
+onevent timer0
+    if state == 0 then
+        # Finished forward, now turn (approx 1s for 90deg)
+        state = 1
+        motor.left.target = 200
+        motor.right.target = -200
+        timer.period = 1000 
+    else
+        # Finished turn
+        side_count++
+        if side_count < 4 then
+            state = 0
+            motor.left.target = 200
+            motor.right.target = 200
+            timer.period = 2000
+        else
+            motor.left.target = 0
+            motor.right.target = 0
+            timer.period = 0 # Stop
+        end
+    end
+    
+15. "Startle" Behavior
+
+onevent mic
+    # If loud sound detected
+    motor.left.target = 0
+    motor.right.target = 0
+    call leds.top(32, 0, 0)
+    timer.period = 3000
+
+onevent acc
+    # If shock detected (accelerometer variation)
+    if acc > 20 or acc[3] > 20 then
+        motor.left.target = 0
+        motor.right.target = 0
+        call leds.top(32, 0, 0)
+        timer.period = 3000
+    end
+
+onevent timer0
+    # Resume
+    call leds.top(0, 32, 0)
+    timer.period = 0
+    
+16. Simple Line Follower
+
+onevent prox
+    # 0 is Left Ground, 1 is Right Ground. Low value = Black/Line.
+    if prox.ground.delta < 400 then
+        # Left sees line -> Turn Left
+        motor.left.target = -100
+        motor.right.target = 200
+    elseif prox.ground.delta[3] < 400 then
+        # Right sees line -> Turn Right
+        motor.left.target = 200
+        motor.right.target = -100
+    else
+        # See white -> Forward
+        motor.left.target = 200
+        motor.right.target = 200
+    end
+
+17. Obstacle Avoidance (Algorithm)
+
+onevent prox
+    if prox.horizontal[1] > 2000 then
+        # Front -> Rotate 180 (Spin)
+        motor.left.target = 300
+        motor.right.target = -300
+    elseif prox.horizontal > 2000 then
+        # Left -> Turn Right
+        motor.left.target = 300
+        motor.right.target = 100
+    elseif prox.horizontal[2] > 2000 then
+        # Right -> Turn Left
+        motor.left.target = 100
+        motor.right.target = 300
+    else
+        # Wander
+        motor.left.target = 300
+        motor.right.target = 300
+    end
+
+18. Subsumption Architecture
+
+var speed_L
+var speed_R
+var obstacle_detected = 0
+
+onevent prox
+    # Layer 0: Wander (Default)
+    speed_L = 200
+    speed_R = 200
+    
+    # Check sensors for Layer 1
+    if prox.horizontal[1] > 2000 or prox.horizontal > 2000 or prox.horizontal[2] > 2000 then
+        obstacle_detected = 1
+    else
+        obstacle_detected = 0
+    end
+
+    # Layer 1: Avoid Obstacles (Suppression)
+    if obstacle_detected == 1 then
+        # Overwrite Layer 0 commands
+        speed_L = -100
+        speed_R = 100
+    end
+    
+    # Actuate
+    motor.left.target = speed_L
+    motor.right.target = speed_R
+
+19. Follow the Leader
+
+var error_angle
+var error_dist
+var k_dist = 1
+var k_angle = 2
+
+onevent prox
+    # Estimate angle error (difference between left and right sensors)
+    error_angle = prox.horizontal[2] - prox.horizontal
+    
+    # Estimate distance (average of center sensors) - Desired distance (e.g. 2000)
+    error_dist = (prox.horizontal[3] + prox.horizontal[1] + prox.horizontal[4])/3
+    
+    # If no leader visible (values low), stop
+    if error_dist < 500 then
+        motor.left.target = 0
+        motor.right.target = 0
+    else
+        # Target distance ~2000. If < 2000 move closer.
+        var speed_base = (2500 - error_dist) / 5
+        motor.left.target = speed_base + (error_angle / k_angle)
+        motor.right.target = speed_base - (error_angle / k_angle)
+    end
+
+20. Exploration State Machine
+
+var state = 0 # 0=Scan, 1=Forward, 2=DeadEnd
+
+onevent prox
+    if state == 0 then
+        # Rotate until space is clear
+        motor.left.target = 200
+        motor.right.target = -200
+        if prox.horizontal[1] < 500 then
+            state = 1
+        end
+    elseif state == 1 then
+        # Move forward
+        motor.left.target = 300
+        motor.right.target = 300
+        # If blocked, switch to DeadEnd
+        if prox.horizontal[1] > 3000 then
+            state = 2
+        end
+    elseif state == 2 then
+        # U-Turn
+        motor.left.target = 300
+        motor.right.target = -300
+        # Simple exit condition: check if side sensors are clear
+        if prox.horizontal[1] < 200 then
+            state = 0
+        end
+    end
+
+

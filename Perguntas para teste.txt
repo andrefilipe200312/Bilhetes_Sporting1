@@ -1,0 +1,266 @@
+
+a) Compare e contraste sensores de distância por ultrassom (US) versus sensores de distância por infravermelho (IR).
+
+Discuta como cada um lida com materiais “difíceis”, referenciando especificamente como reagem a superfícies pretas foscas e a tecidos que absorvem som.
+
+Princípio de funcionamento:
+Sensores US emitem ondas de pressão (som) e medem o Tempo de Voo (Time-of-Flight, ToF) para calcular a distância.
+Sensores IR normalmente usam a intensidade da luz refletida ou triangulação (embora os slides enfatizem que US usa ToF e IR usa luz).
+
+Resposta a materiais “difíceis”:
+
+Tecidos que absorvem som: Sensores US têm dificuldade porque os tecidos absorvem as ondas sonoras, impedindo que o eco retorne ao sensor. Sensores IR provavelmente detectariam o tecido se ele for opaco.
+
+Superfícies pretas foscas: Embora não seja explicitamente detalhado no texto, os slides indicam que sensores US são sensíveis ao tipo de material. Em geral, em contextos de robótica, sensores IR falham em superfícies pretas porque elas absorvem a luz, enquanto sensores US funcionam bem em superfícies pretas, pois a cor não afeta a reflexão do som.
+
+Exatidão (Accuracy) e Precisão (Precision)
+
+Defina os conceitos de Exatidão e Precisão no contexto de sensores robóticos. Esboce um gráfico de densidade de probabilidade representando um sensor que é altamente preciso, mas com baixa exatidão em relação a um valor de referência verdadeiro.
+
+Definições:
+
+Exatidão (Accuracy): Proximidade de uma medição em relação ao valor físico verdadeiro (implícito no contexto de “Calibração” e do mapeamento de valores do sensor para grandezas físicas).
+
+Precisão (ou Confiabilidade): Capacidade do sensor de fornecer resultados consistentes sob as mesmas condições. Está relacionada à variância estatística das leituras do sensor.
+
+Sensor Time-of-Flight (ToF)
+
+Um robô utiliza um sensor Time-of-Flight (ToF). Se o sensor emite um pulso e recebe a resposta após 2,55 ms, calcule a distância até o obstáculo.
+(Assuma a velocidade do som como 343 m/s para US ou 3×10⁸ m/s para luz, declarando claramente qual suposição está sendo usada com base no tipo de sensor).
+
+Regra de três simples e dividir por dois devido ao ECO.
+
+Estabilidade Estática vs. Estabilidade Dinâmica
+
+Explique a diferença entre estabilidade estática e estabilidade dinâmica na locomoção. Forneça um exemplo de um robô (ou veículo) que depende de estabilidade dinâmica para permanecer em pé e explique o mecanismo (por exemplo, ZMP ou compensação ativa) que evita a queda.
+
+Estabilidade Estática: O robô é estável se o seu centro de massa cair dentro do polígono definido pelos pontos de apoio enquanto o corpo está parado.
+
+Estabilidade Dinâmica: Propriedade de um corpo de compensar perturbações de equilíbrio enquanto está em movimento, mesmo que não seja estaticamente estável.
+
+Exemplo: Um robô bípede andando (como o mostrado nos slides usando ZMP – Zero Moment Point). Durante a caminhada, o centro de massa frequentemente projeta-se fora da base de suporte, mas o robô evita cair por meio de compensação ativa e do uso do momento.
+
+Sensores Ativos vs. Passivos
+
+Explique a diferença fundamental entre sensores ativos e passivos. Forneça um exemplo de sensor ativo usado para medição de distância e um exemplo de sensor passivo usado para propriocepção.
+
+Solução:
+Sensores passivos medem energia que é naturalmente gerada pelo ambiente (por exemplo, uma câmera captando luz solar refletida ou um microfone captando som).
+Sensores ativos emitem sua própria energia no ambiente e medem a reação/reflexão.
+
+Exemplos:
+
+Ativos: Ultrassom, LIDAR, Proximidade por Infravermelho.
+
+Passivos: Câmeras (CCD/CMOS), Microfones, Sensores piezoelétricos.
+
+Propriocepção vs. Exterocepção
+
+Solução:
+
+i) Encoder de roda: Proprioceptivo. Mede o estado interno do robô (rotação da roda/ângulo da junta), não o ambiente externo.
+
+ii) LIDAR: Exteroceptivo. Mede a distância até objetos externos, percebendo o ambiente.
+
+Encoders: Incrementais vs. Absolutos
+
+Solução:
+Um encoder incremental conta transições (pulsos) relativas a um ponto inicial; se a energia for perdida, a contagem é perdida e é necessário um procedimento de “homing” para restabelecer a referência.
+Um encoder absoluto possui um padrão único (código) para cada ângulo específico, conhecendo sua posição exata imediatamente ao ligar, sem necessidade de movimento.
+
+Ruído de Sinal e Filtragem (SMA)
+
+Solução:
+
+Fórmula:
+SMAₖ = (1/k) ∑ᵢ₌ₙ₋ₖ₊₁ⁿ pᵢ (média das últimas k medições)
+
+Compromisso (trade-off):
+Um k grande fornece um sinal mais suave (filtra mais ruído), mas introduz atraso significativo na resposta do sistema.
+Um k pequeno é mais responsivo (menos atraso), mas filtra menos ruído.
+
+Tecnologia LIDAR
+
+Solução:
+LIDAR (Light Detection and Ranging) emite pulsos de laser e mede o Tempo de Voo (ToF) para a luz retornar. Ao girar o emissor/receptor usando um espelho ou motor, ele varre um plano horizontal, criando uma “fatia” 2D ou mapa de distâncias aos obstáculos no ambiente.
+
+Modelo de Câmera Pinhole
+
+Solução:
+No modelo pinhole, a luz passa por uma pequena abertura. A relação é de similaridade geométrica:
+
+y / y′ = x₀ / xᵢ
+
+xᵢ: distância do pinhole ao plano da imagem (distância focal).
+
+x₀: distância do pinhole ao objeto.
+
+y′: tamanho projetado do objeto no plano da imagem.
+
+A imagem formada é invertida.
+
+Características de Visão Computacional: Fluxo Óptico
+
+Solução:
+Fluxo óptico é o padrão de movimento aparente de objetos na imagem entre dois frames consecutivos, causado pelo movimento do objeto ou da câmera.
+Um robô móvel pode usá-lo para estimar sua própria velocidade (egomotion) em relação ao ambiente estático ou para detectar obstáculos em movimento.
+
+Robótica Probabilística: Diagnóstico vs. Causal
+
+Causal (P(z | x)): Probabilidade de observar a medição z dado que o robô está no estado x (por exemplo: “Dado que estou em frente a uma porta, o que o sensor vê?”). Geralmente é mais fácil de modelar fisicamente.
+
+Diagnóstico (P(x | z)): Probabilidade de o robô estar no estado x dado que observou a medição z (por exemplo: “Vejo uma porta, estou no corredor?”).
+
+Regra de Bayes: Permite converter modelos causais em estimativas diagnósticas:
+P(x | z) = P(z | x) P(x) / P(z)
+
+Filtro de Kalman: Predição vs. Atualização
+
+Predição (Atualização Temporal): O robô estima sua nova posição com base nos comandos de movimento (uₖ₋₁). A incerteza (covariância Pₖ⁻) aumenta devido ao ruído do processo (Q).
+
+Atualização (Correção): O robô combina a predição com dados dos sensores (zₖ). A incerteza (covariância Pₖ) diminui porque o sensor fornece informação que restringe a estimativa.
+
+SLAM
+
+Solução:
+SLAM (Localização e Mapeamento Simultâneos) é o processo em que um robô constrói um mapa de um ambiente desconhecido enquanto simultaneamente estima sua própria posição nesse mapa. É um problema de “ovo e galinha”, pois a localização precisa requer um mapa, mas a construção de um mapa consistente requer localização precisa.
+
+Malha Aberta vs. Malha Fechada
+
+Solução:
+
+Malha Aberta: Controlador → Atuador → Sistema (sem realimentação).
+
+Malha Fechada: Controlador → Atuador → Sistema → Sensor → Controlador (com realimentação).
+
+O sensor na malha fechada fornece o sinal de saída y(t), que é comparado com a referência r(t), permitindo ao controlador calcular o erro e(t) e corrigir desvios.
+
+Controle PID (Proporcional)
+
+Solução:
+
+Efeito: A saída é proporcional ao erro atual (u(t) = Kₚ e(t)).
+
+Kₚ baixo: O sistema responde lentamente e pode nunca atingir o alvo devido ao atrito (erro em regime permanente).
+
+Kₚ alto: O sistema reage rapidamente, mas pode ultrapassar o alvo e oscilar (comportamento subamortecido).
+
+Controle PID (Integral)
+
+Solução:
+Um controlador P pode fornecer correção zero quando o erro é pequeno, deixando o robô próximo, mas não exatamente no alvo (erro em regime permanente).
+O termo Integral (Kᵢ) soma os pequenos erros passados ao longo do tempo até que o termo acumulado seja grande o suficiente para eliminar esse erro.
+
+Controle PID (Derivativo)
+
+Solução:
+
+Função: K𝒹 reage à taxa de variação do erro, atuando como um amortecedor ou freio para evitar overshoot.
+
+Efeito negativo: Se o sinal do sensor tiver ruído de alta frequência, o termo derivativo amplifica esse ruído, causando tremores ou instabilidade nos atuadores.
+
+Holonomia
+
+Solução:
+Um robô holonomico é aquele em que o número de graus de liberdade controláveis é igual ao número total de graus de liberdade no plano (3 em 2D: x, y, θ).
+
+Carro (Ackermann): Não-holonômico. Possui 2 graus de liberdade controláveis (velocidade e direção), mas move-se em um espaço de configuração 3D (x, y, θ). Não pode mover-se lateralmente instantaneamente; precisa realizar manobras.
+
+Cinemática de Locomoção (Tração Diferencial)
+
+Solução:
+A velocidade angular ω depende da diferença entre as velocidades das rodas direita e esquerda (vᴿ, vᴸ) e da distância entre elas (d):
+
+ω = (vᴿ − vᴸ) / d
+
+Estabilidade e ZMP
+
+Solução:
+ZMP (Zero Moment Point) é o ponto no solo onde o resultante das forças de gravidade e inércia não gera momento horizontal.
+Para que um robô mantenha estabilidade dinâmica (por exemplo, um bípede andando), o ZMP deve permanecer estritamente dentro do polígono de suporte (a área dos pés), mesmo que o centro de massa projete-se fora dele.
+
+Navegação vs. Pilotagem
+
+Solução:
+
+Navegação: Planejamento global usando mapas para encontrar caminhos ótimos até um objetivo distante (por exemplo, algoritmo A*).
+
+Pilotagem: Movimento local e reativo lidando com obstáculos imediatos e imprevistos (por exemplo, seguir paredes, evitar obstáculos).
+
+Planejamento de Caminho (Algoritmos Bug)
+
+Solução:
+
+Bug 1: Exaustivo. Contorna todo o obstáculo para encontrar o ponto mais próximo do objetivo antes de sair. É mais lento, porém confiável.
+
+Bug 2: Guloso. Segue o obstáculo apenas até cruzar novamente a “m-line” (linha do início ao objetivo) mais próximo do objetivo. Normalmente é mais rápido, mas pode ser menos eficiente em labirintos ou espirais.
+
+RRT (Rapidly-exploring Random Trees)
+
+Solução:
+RRT explora o espaço amostrando aleatoriamente um ponto no espaço de configuração e estendendo o nó mais próximo da árvore em direção a esse ponto por um pequeno passo. Isso permite explorar rapidamente espaços grandes e de alta dimensionalidade sem construir uma grade densa ou um mapa geométrico completo.
+
+Arquiteturas Funcionais vs. Comportamentais
+
+Solução:
+
+Crítica: Arquiteturas funcionais usam um ciclo serial Perceber → Modelar → Planejar → Agir.
+
+Paradoxo: Sensores são ruidosos e o mundo é complexo e dinâmico. Construir um modelo simbólico perfeito do mundo é lento e propenso a erros, dificultando respostas em tempo real (o “gargalo da modelagem”).
+
+Arquitetura de Subsumption
+
+AFSM: O sistema é construído com Máquinas de Estados Finitos Aumentadas (Augmented Finite State Machines) que executam em paralelo.
+
+Supressão: Camadas de nível superior (por exemplo, “Evitar”) podem suprimir a entrada/saída de camadas inferiores (por exemplo, “Explorar”), garantindo que comportamentos de sobrevivência tenham prioridade.
+
+Etologia – Reflexos vs. FAP
+
+Reflexo: Ação simples cuja duração é aproximadamente igual à duração do estímulo (para quando o estímulo para).
+
+FAP (Fixed Action Pattern): Um estímulo dispara uma sequência de ações que continua até o fim, mesmo que o estímulo seja removido (execução em malha aberta).
+
+Programação Orientada a Eventos (EDP)
+
+Solução:
+No ASEBA (Thymio), o loop principal normalmente é vazio porque a arquitetura é assíncrona. O código depende de eventos (por exemplo, onevent prox, onevent timer) que disparam handlers específicos. A CPU permanece em repouso ou executa tarefas de baixo nível até que um evento ocorra, maximizando a eficiência.
+
+Emergência
+
+Solução:
+Comportamento emergente ocorre quando padrões globais complexos surgem da interação de regras locais simples e independentes, sem serem explicitamente programados.
+Exemplo: comportamento de “bando” (flocking) em enxames, onde cada robô segue regras simples como “manter distância” e “igualar velocidade”.
+
+Arquiteturas Híbridas
+
+Solução:
+Sistemas puramente comportamentais não possuem memória nem planejamento de longo prazo (“presos ao agora”).
+Arquiteturas híbridas adicionam uma camada deliberativa (planejamento/mapas) sobre uma camada reativa (segurança/velocidade), permitindo planejamento ótimo e gestão de sequências complexas.
+
+Estigmergia
+
+Solução:
+Estigmergia é uma forma de coordenação indireta em que agentes se comunicam modificando o ambiente.
+
+Exemplo: Cupins construindo um ninho. Um deposita uma bola de lama/feromônio; essa modificação estimula outro a depositar lama no mesmo local, coordenando a construção sem comunicação direta.
+
+Interação Multi-Robô: Ligações Fracas vs. Fortes
+
+Fracamente ligadas: Sem dependência mútua estrita; se um falhar, os outros continuam (por exemplo, busca paralela).
+
+Fortemente ligadas: Dependência mútua; a tarefa falha se um membro falhar.
+
+Exemplo: Dois robôs carregando uma mesa pesada juntos.
+
+Robótica de Enxame
+
+Solução:
+
+Propriedades: Controle distribuído, ausência de hierarquia, sensoriamento e comunicação locais.
+
+Redundância: Como todos os agentes são simples e idênticos, se um falhar, outro pode substituí-lo imediatamente. O desempenho degrada-se de forma gradual, em vez de colapsar.
+
+Simulação Robótica: Reality Gap
+
+Solução:
+O Reality Gap refere-se à discrepância entre o ambiente simulado e o mundo físico. Simuladores usam física simplificada (modelos determinísticos, atrito idealizado, sensores perfeitos). Um algoritmo que funciona na simulação pode falhar no robô real devido a ruído de sensores, derrapagem das rodas ou variações de iluminação não modeladas.
